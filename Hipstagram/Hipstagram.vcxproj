@@ -118,6 +118,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Main.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

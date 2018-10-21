@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "resource.h"
+#include "Main.h"
 #include <iostream>
 #include <opencv2\core\core.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
@@ -8,41 +9,86 @@
 #include <math.h>
 #include <windows.h>
 #include <stdio.h>
+#include <cassert>
+#include <windowsx.h>
 
 #pragma comment(lib,"opencv_world310.lib")
-
 using namespace cv;
 using namespace std;
-
 
 HWND ghDlg = 0;
 HINSTANCE ghAppInst;
 
+UINT TimerID = 0;
+enum ModoOperacion { ArchivoImagen, ArchivoVideo, Camara, Ninguno };
+ModoOperacion OperacionActual = ModoOperacion::Ninguno;
+Mat MatOriginal, MatFiltro;
+VideoCapture vCapture;
+std::string pathVideo="";
+BOOL Pause = false;
+
+#pragma region Prototipos
 INT_PTR CALLBACK MsgDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-void BtnEncenderCamaraOnClick();
+VOID OnTimer(HWND hWnd, UINT id);
+VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify);
+BOOL OnInitDialog(HWND hWnd, HWND hWndCtl, LPARAM lParam);
+#pragma endregion
+
+#pragma region Utils
+VOID CambiarOperacion(ModoOperacion modoOperacion)
+{
+	if (vCapture.isOpened())
+	{ vCapture.release(); }
+
+	OperacionActual = modoOperacion;
+}
+VOID MostrarMensaje(std::string mensaje, std::string titulo)
+{ MessageBox(NULL, mensaje.c_str(), titulo.c_str(), MB_OK); }
+VOID MostrarExcepcion(Exception ex)
+{ 
+	MostrarMensaje(ex.msg, "EX");
+	CambiarOperacion(ModoOperacion::Ninguno);
+}
+BOOL OpenFileName(std::string &fileName, LPCSTR filter)
+{
+	CHAR szFile[MAX_PATH];
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = NULL;
+	ofn.lpstrFile = szFile;
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = filter;
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;;
+	//ofn.lpstrDefExt = ext;
+	BOOL result = GetSaveFileNameA(&ofn);
+
+	if (result)
+	{ fileName = std::string(szFile); }
+
+	return result;
+}
+#pragma endregion
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR cmdLine, int showCmd)
 {
 
-	ghAppInst = hInstance; // Create the modeless dialog window.
-	ghDlg = CreateDialog(
-		hInstance, // Application instance.
-		MAKEINTRESOURCE(IDD_MAIN), // Dialog resource ID.
-		0, // Parent window--null for no parent ;___;
-		MsgDlgProc); // Dialog window procedure.
+	ghAppInst = hInstance;
+	ghDlg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_MAIN), 0, MsgDlgProc);
+	ShowWindow(ghDlg, showCmd); 
 
-	ShowWindow(ghDlg, showCmd); // Show the dialog.
-
-	// Enter the message loop.
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 
+	TimerID = SetTimer(ghDlg, ID_MAINTIMER, 42, NULL);
+
 	while (GetMessage(&msg, 0, 0, 0))
 	{
-		// Is the message a dialog message? If so the function
-		// IsDialogMessage will return true and then dispatch
-		// the message to the dialog window procedure.
-		// Otherwise, we process as the message as normal.
 		if (ghDlg == 0 || !IsDialogMessage(ghDlg, &msg))
 		{
 			TranslateMessage(&msg);
@@ -52,54 +98,171 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR cmdLine, i
 	return (int)msg.wParam;
 }
 
-
 INT_PTR  CALLBACK MsgDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
-		case WM_INITDIALOG:
-			return true;
-		case WM_COMMAND:
-			switch (LOWORD(wParam))
-			{
-			case IDC_BTN_ENCENDER_CAMARA: { BtnEncenderCamaraOnClick(); } break;
-			}
-			return true;
-			return 0;
-		case WM_CREATE: 
-			return 0;
+		HANDLE_MSG(hDlg, WM_TIMER, OnTimer);
+		HANDLE_MSG(hDlg, WM_COMMAND, OnCommand);
+		HANDLE_MSG(hDlg, WM_INITDIALOG, OnInitDialog);
+		//case WM_INITDIALOG:
+		//	return true;
 		case WM_CLOSE:
 			DestroyWindow(hDlg);
 			return true;
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			return true;
+		
 	}
 	return false;
 }
 
-void BtnEncenderCamaraOnClick()
+VOID OnTimer(HWND hWnd, UINT id) 
 {
-	VideoCapture camara(0);
-	if (camara.isOpened())
+	if (Pause)
+	{ return; }
+
+	if (vCapture.isOpened() && !vCapture.read(MatOriginal))
+	{ return; }
+
+	if (OperacionActual == ModoOperacion::ArchivoVideo && (vCapture.get(CV_CAP_PROP_POS_FRAMES) == vCapture.get(CV_CAP_PROP_FRAME_COUNT)))
+	{ vCapture = VideoCapture(pathVideo); }
+
+	if (MatOriginal.data != NULL)
 	{
-		while (true)
-		{
-			Mat frame;
-			if (camara.read(frame))
-			{ 
-				imshow("", frame); 
-				// Se supone que con eso se convierte a bitmap
-				//HBITMAP hBitmap = CreateBitmap(frame.cols, frame.row, 1, 32, frame.data);
+		MatFiltro = MatOriginal.clone();
 
-				//CStatic* m_picture;
+		// Aqui hay que procesar la imagen xd
 
-			}
-			if (waitKey(16) == 27)
-			{ break; }
-		}
+		imshow("Original", MatOriginal);
+		imshow("Filtro", MatFiltro);
 	}
 	else
-	{ MessageBox(0, "No se pudo abrir la camara", "Error", MB_OK); }
+	{
+		destroyWindow("Original");
+		destroyWindow("Filtro");
+	}
+}
+BOOL OnInitDialog(HWND hWnd, HWND hWndCtl, LPARAM lParam) 
+{
+	HWND cmb = GetDlgItem(hWnd, IDC_CMB_FILTROS);
+	SendMessage(cmb, CB_ADDSTRING, 0, (LPARAM)"Ejemplo");
+
+	//namedWindow("Original", WINDOW_NORMAL);
+	//namedWindow("Filtro", WINDOW_NORMAL);
+
+	//resizeWindow("Original", 500, 400);
+	//resizeWindow("Filtro", 500, 400);
+
+	return true;
+}
+VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify) 
+{
+	Pause = true;
+	switch (id)
+	{
+	case IDC_BTN_ENCENDER_CAMARA: 
+	{
+		try
+		{ 
+			CambiarOperacion(ModoOperacion::Camara); 
+			vCapture = VideoCapture(0);
+			SetDlgItemText(hWnd, IDC_TXT_ARCHIVO, "Tomando imagen de la camara");
+		}
+		catch (Exception ex)
+		{ MostrarExcepcion(ex); }
+	} 
+	break;
+	case IDC_BTN_CARGAR_IMAGEN:
+	{
+		try
+		{
+			std::string filename;
+			if (OpenFileName(filename, "Archivos de Imagen (*.png, *.jpg)\0*.png;*.jpg\0"))
+			{
+				CambiarOperacion(ModoOperacion::ArchivoImagen);
+				MatOriginal = imread(filename);
+
+				if (MatOriginal.data == NULL)
+				{
+					MostrarMensaje("Archivo no valido", "Error");
+					CambiarOperacion(ModoOperacion::Ninguno);
+				}
+				else
+				{ SetDlgItemText(hWnd, IDC_TXT_ARCHIVO, filename.c_str()); }
+			}
+		}
+		catch (Exception ex)
+		{ MostrarExcepcion(ex); }
+	}
+	break;
+	case IDC_BTN_CARGAR_VIDEO:
+	{
+		try 
+		{
+			std::string filename;
+			if (OpenFileName(filename, "Archivos de Video (*.mp4 )\0*.mp4\0"))
+			{
+				CambiarOperacion(ModoOperacion::ArchivoVideo);
+				vCapture = VideoCapture(filename);
+				pathVideo = filename;
+				SetDlgItemText(hWnd, IDC_TXT_ARCHIVO, filename.c_str());
+			}
+		}
+		catch (Exception ex)
+		{ MostrarExcepcion(ex); }
+	}
+	break;
+	case IDC_BTN_CAPTURAR_IMAGEN:
+	{
+		try
+		{
+			std::string filename;
+			if (OpenFileName(filename, "Archivos de Imagen (*.jpg)\0*.jpg\0"))
+			{
+				// Falta guardar imagen
+				imwrite(filename, MatFiltro);
+			}
+		}
+		catch (Exception ex)
+		{ MostrarExcepcion(ex); }
+	}
+	break;
+	case IDC_BTN_INICIAR_GRABACION:
+	{
+		try
+		{
+		}
+		catch (Exception ex)
+		{
+			MostrarExcepcion(ex);
+		}
+	}
+	break;
+	case IDC_BTN_DETENER_GRABACION: 
+	{
+		try
+		{
+		}
+		catch (Exception ex)
+		{
+			MostrarExcepcion(ex);
+		}
+	}
+	break;
+	case IDC_BTN_ANADIR_FILTRO:
+	{
+		try
+		{
+		}
+		catch (Exception ex)
+		{
+			MostrarExcepcion(ex);
+		}
+	}
+	break;
+	}
+	Pause = false;
 }
 

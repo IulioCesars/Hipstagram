@@ -1,2 +1,3 @@
 ﻿  Main.cpp
+c:\bitbucket\hipstagram\hipstagram\main.cpp(88): warning C4244: '=': conversión de 'UINT_PTR' a 'UINT'; posible pérdida de datos
   Hipstagram.vcxproj -> C:\BitBucket\Hipstagram\x64\Debug\Hipstagram.exe
