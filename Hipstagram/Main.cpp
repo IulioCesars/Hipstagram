@@ -24,6 +24,7 @@ enum ModoOperacion { ArchivoImagen, ArchivoVideo, Camara, Ninguno };
 ModoOperacion OperacionActual = ModoOperacion::Ninguno;
 Mat MatOriginal, MatFiltro;
 VideoCapture vCapture;
+VideoWriter vWritter;
 std::string pathVideo="";
 BOOL Pause = false;
 
@@ -49,7 +50,7 @@ VOID MostrarExcepcion(Exception ex)
 	MostrarMensaje(ex.msg, "EX");
 	CambiarOperacion(ModoOperacion::Ninguno);
 }
-BOOL OpenFileName(std::string &fileName, LPCSTR filter)
+BOOL OpenFileName(std::string &fileName, LPCSTR filter, LPCSTR ext = "")
 {
 	CHAR szFile[MAX_PATH];
 	OPENFILENAME ofn;
@@ -65,7 +66,7 @@ BOOL OpenFileName(std::string &fileName, LPCSTR filter)
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;;
-	//ofn.lpstrDefExt = ext;
+	ofn.lpstrDefExt = ext;
 	BOOL result = GetSaveFileNameA(&ofn);
 
 	if (result)
@@ -126,7 +127,7 @@ VOID OnTimer(HWND hWnd, UINT id)
 	if (vCapture.isOpened() && !vCapture.read(MatOriginal))
 	{ return; }
 
-	if (OperacionActual == ModoOperacion::ArchivoVideo && (vCapture.get(CV_CAP_PROP_POS_FRAMES) == vCapture.get(CV_CAP_PROP_FRAME_COUNT)))
+	if (OperacionActual == ModoOperacion::ArchivoVideo && vCapture.get(CV_CAP_PROP_POS_FRAMES) == vCapture.get(CV_CAP_PROP_FRAME_COUNT))
 	{ vCapture = VideoCapture(pathVideo); }
 
 	if (MatOriginal.data != NULL)
@@ -137,6 +138,9 @@ VOID OnTimer(HWND hWnd, UINT id)
 
 		imshow("Original", MatOriginal);
 		imshow("Filtro", MatFiltro);
+
+		if (vWritter.isOpened())
+		{ vWritter.write(MatFiltro); }
 	}
 	else
 	{
@@ -218,11 +222,16 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 	{
 		try
 		{
+			if (OperacionActual == ModoOperacion::Ninguno)
+			{ MostrarMensaje("Primero procese una imagen o video.", "Error"); }
+
 			std::string filename;
-			if (OpenFileName(filename, "Archivos de Imagen (*.jpg)\0*.jpg\0"))
+			if (OpenFileName(filename, "Archivos de Imagen (*.bmp)\0*.bmp\0", "bmp"))
 			{
 				// Falta guardar imagen
-				imwrite(filename, MatFiltro);
+				vector<int> compression_params;
+				compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+				imwrite(filename, MatFiltro, compression_params);
 			}
 		}
 		catch (Exception ex)
@@ -233,6 +242,23 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 	{
 		try
 		{
+			if (OperacionActual == ModoOperacion::Ninguno)
+			{ MostrarMensaje("Primero procese una imagen o video.", "Error"); }
+
+			if (vWritter.isOpened())
+			{ MostrarMensaje("Ya se esta grabando", "Error"); }
+
+			std::string filename;
+			if (OpenFileName(filename, "Archivos de Video (*.avi)\0*.avi\0", "avi"))
+			{
+				vWritter.open(filename,
+					CV_FOURCC('M', 'J', 'P', 'G'),
+					10,
+					Size(vCapture.get(CV_CAP_PROP_FRAME_WIDTH), vCapture.get(CV_CAP_PROP_FRAME_HEIGHT))
+				);
+				int i = 0;
+			}
+
 		}
 		catch (Exception ex)
 		{
@@ -244,6 +270,16 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 	{
 		try
 		{
+			if (OperacionActual == ModoOperacion::Ninguno)
+			{ MostrarMensaje("Primero procese una imagen o video.", "Error"); }
+
+			if (vWritter.isOpened())
+			{ 
+				vWritter.release(); 
+				MostrarMensaje("Se ha guardado el archivo.");
+			}
+			else
+			{ MostrarMensaje("No se ha iniciado la grabación.","Error"); }
 		}
 		catch (Exception ex)
 		{
