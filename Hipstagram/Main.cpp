@@ -276,7 +276,7 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 			if (vWritter.isOpened())
 			{ 
 				vWritter.release(); 
-				MostrarMensaje("Se ha guardado el archivo.");
+				MostrarMensaje("Se ha guardado el archivo.", ":D");
 			}
 			else
 			{ MostrarMensaje("No se ha iniciado la grabación.","Error"); }

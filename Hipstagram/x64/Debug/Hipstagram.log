@@ -1,8 +1,9 @@
 ﻿  Main.cpp
-c:\bitbucket\hipstagram\hipstagram\main.cpp(89): warning C4244: '=': conversión de 'UINT_PTR' a 'UINT'; posible pérdida de datos
-c:\bitbucket\hipstagram\hipstagram\main.cpp(257): warning C4244: 'argumento': conversión de 'double' a '_Tp'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(89): warning C4244: '=': conversión de 'UINT_PTR' a 'UINT'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(257): warning C4244: 'argumento': conversión de 'double' a '_Tp'; posible pérdida de datos
           with
           [
               _Tp=int
           ]
-  Hipstagram.vcxproj -> C:\BitBucket\Hipstagram\x64\Debug\Hipstagram.exe
+  LINK : no se encontró C:\SourceTree\Hipstagram\x64\Debug\Hipstagram.exe o no lo generó el último vínculo incremental; ejecutando vínculo completo
+  Hipstagram.vcxproj -> C:\SourceTree\Hipstagram\x64\Debug\Hipstagram.exe
