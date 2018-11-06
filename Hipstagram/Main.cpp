@@ -1,6 +1,7 @@
 #include <windows.h>
 #include "resource.h"
 #include "Main.h"
+#include "ProcessImage.cpp"
 #include <iostream>
 #include <opencv2\core\core.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
@@ -27,6 +28,7 @@ VideoCapture vCapture;
 VideoWriter vWritter;
 std::string pathVideo="";
 BOOL Pause = false;
+ProcessImage pImage = ProcessImage();
 
 #pragma region Prototipos
 INT_PTR CALLBACK MsgDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -132,9 +134,7 @@ VOID OnTimer(HWND hWnd, UINT id)
 
 	if (MatOriginal.data != NULL)
 	{
-		MatFiltro = MatOriginal.clone();
-
-		// Aqui hay que procesar la imagen xd
+		MatFiltro = pImage.Process(MatOriginal);
 
 		imshow("Original", MatOriginal);
 		imshow("Filtro", MatFiltro);
