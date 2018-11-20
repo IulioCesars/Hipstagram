@@ -2,6 +2,7 @@
 #include "resource.h"
 #include "Main.h"
 #include "ProcessImage.cpp"
+#include "HumanDetection.cpp"
 #include <iostream>
 #include <opencv2\core\core.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
@@ -12,6 +13,7 @@
 #include <stdio.h>
 #include <cassert>
 #include <windowsx.h>
+#include "wtypes.h"
 
 #pragma comment(lib,"opencv_world310.lib")
 using namespace cv;
@@ -29,6 +31,13 @@ VideoWriter vWritter;
 std::string pathVideo="";
 BOOL Pause = false;
 ProcessImage pImage = ProcessImage();
+HumanDetection hDetector = HumanDetection();
+
+int displayWith = 0;
+int displayHeight = 0;
+
+bool volverACalcularRedimencion = true;
+Size proporcionRedimencion = Size(600,400);
 
 #pragma region Prototipos
 INT_PTR CALLBACK MsgDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -42,6 +51,8 @@ VOID CambiarOperacion(ModoOperacion modoOperacion)
 {
 	if (vCapture.isOpened())
 	{ vCapture.release(); }
+
+	volverACalcularRedimencion = true;
 
 	OperacionActual = modoOperacion;
 }
@@ -90,6 +101,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR cmdLine, i
 
 	TimerID = SetTimer(ghDlg, ID_MAINTIMER, 42, NULL);
 
+	HWND desk = GetDesktopWindow();
+	RECT desktop;
+	GetWindowRect(desk, &desktop);
+	displayWith = desktop.right * 0.5;
+	displayHeight = desktop.bottom * 0.5;
+
 	while (GetMessage(&msg, 0, 0, 0))
 	{
 		if (ghDlg == 0 || !IsDialogMessage(ghDlg, &msg))
@@ -134,7 +151,25 @@ VOID OnTimer(HWND hWnd, UINT id)
 
 	if (MatOriginal.data != NULL)
 	{
+		if (volverACalcularRedimencion)
+		{
+			Size sizeMat = MatOriginal.size();
+			int matHeight = displayHeight;
+			float proporcion = (float)displayHeight / sizeMat.height;
+			int matWith = sizeMat.width * proporcion;
+			proporcionRedimencion = Size(matWith, matHeight);
+			volverACalcularRedimencion = false;
+		}
+
+		resize(MatOriginal, MatOriginal, proporcionRedimencion);
+
 		MatFiltro = pImage.Process(MatOriginal);
+
+		int totalPersonas = 0;
+		if (SendDlgItemMessage(hWnd, IDC_CHECK, BM_GETCHECK, 0, 0))
+		{ MatFiltro = hDetector.Process(MatOriginal, &totalPersonas); }
+
+		SetDlgItemText(hWnd, IDC_TXT_CONTEO, std::to_string(totalPersonas).c_str());
 
 		imshow("Original", MatOriginal);
 		imshow("Filtro", MatFiltro);

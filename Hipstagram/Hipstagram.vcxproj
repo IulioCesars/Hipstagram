@@ -125,6 +125,7 @@
     <ResourceCompile Include="Hipstagram.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="HumanDetection.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ProcessImage.cpp" />
   </ItemGroup>

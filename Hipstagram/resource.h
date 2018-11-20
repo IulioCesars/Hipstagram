@@ -17,8 +17,9 @@
 #define IDC_BTN_ENCENDER_CAMARA         1010
 #define IDC_BTN_CARGAR_ARCHIVO2         1011
 #define IDC_BTN_CARGAR_VIDEO            1011
-#define IDC_CHECK1                      1012
+#define IDC_CHECK                       1012
 #define IDC_EDIT1                       1013
+#define IDC_TXT_CONTEO                  1013
 
 // Next default values for new objects
 // 
