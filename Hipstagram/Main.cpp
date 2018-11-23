@@ -186,13 +186,8 @@ VOID OnTimer(HWND hWnd, UINT id)
 BOOL OnInitDialog(HWND hWnd, HWND hWndCtl, LPARAM lParam) 
 {
 	HWND cmb = GetDlgItem(hWnd, IDC_CMB_FILTROS);
-	SendMessage(cmb, CB_ADDSTRING, 0, (LPARAM)"Ejemplo");
-
-	//namedWindow("Original", WINDOW_NORMAL);
-	//namedWindow("Filtro", WINDOW_NORMAL);
-
-	//resizeWindow("Original", 500, 400);
-	//resizeWindow("Filtro", 500, 400);
+	for (string filtro: ListaFiltros)
+	{ SendMessage(cmb, CB_ADDSTRING, 0, (LPARAM)filtro.c_str()); }
 
 	return true;
 }
@@ -326,12 +321,21 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 	{
 		try
 		{
+			HWND cmb = GetDlgItem(hWnd, IDC_CMB_FILTROS);
+			char cmbValue[_MAX_PATH];
+			int nIndex = SendMessage(cmb, CB_GETCURSEL, 0, 0);
+			SendMessage(cmb, CB_GETLBTEXT, nIndex, (LPARAM)cmbValue);
+
+			pImage.AddFilter(std::string(cmbValue));
 		}
 		catch (Exception ex)
 		{
 			MostrarExcepcion(ex);
 		}
 	}
+	break;
+	case IDC_BTN_REINICIAR:
+	{ pImage.ClearFilters(); }
 	break;
 	}
 	Pause = false;
