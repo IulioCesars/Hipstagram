@@ -1,25 +1,32 @@
 #include <opencv2\core\core.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 #include <opencv2\highgui\highgui.hpp>
+#include <algorithm>
+
 
 #pragma comment(lib,"opencv_world310.lib")
 using namespace cv;
 using namespace std;
 
-const string BLANCO_NEGRO = "1. Escala de Grises";
-const string SEPIA = "2. Sepia";
+const string BLANCO_NEGRO = "A. Escala de Grises";
+const string SEPIA = "B. Sepia";
 
-const string MEDIA = "3. Media";
-const string MEDIAPONDERADA = "4. Media Ponderada";
-const string SUSTRACCIONMEDIA = "5. Sustraccion de la Media";
-const string LAPLACIANO = "6. Laplaciano";
-const string MENOSLAPLACIANO = "7. Menos Laplaciano";
-const string NORTESUR = "8. Norte - Sur";
-const string ESTEOESTE= "9. Este - Oeste";
+const string MEDIA = "C. Media";
+const string MEDIAPONDERADA = "D. Media Ponderada";
+const string SUSTRACCIONMEDIA = "E. Sustraccion de la Media";
+const string LAPLACIANO = "F. Laplaciano";
+const string MENOSLAPLACIANO = "G. Menos Laplaciano";
+const string NORTESUR = "H. Norte - Sur";
+const string ESTEOESTE = "I. Este - Oeste";
+const string SOBEL_C = "J. Sobel C";
+const string SOBEL_F = "K. Sobel F";
+const string GAUSSIANO = "L. Gaussiano";
+const string ECUALIZAR = "M. Ecualizar";
+const string SHARPEN = "X1. Sharpen";
+const string EMBOSS = "X2. Emboss";
 
 
-
-const string ListaFiltros[9] = 
+const string ListaFiltros[15] = 
 {
 	BLANCO_NEGRO,
 	SEPIA,
@@ -29,7 +36,13 @@ const string ListaFiltros[9] =
 	LAPLACIANO,
 	MENOSLAPLACIANO,
 	NORTESUR,
-	ESTEOESTE
+	ESTEOESTE,
+	SOBEL_C,
+	SOBEL_F,
+	GAUSSIANO,
+	ECUALIZAR,
+	SHARPEN,
+	EMBOSS
 };
 
 class ProcessImage
@@ -71,6 +84,31 @@ class ProcessImage
 		-1, 1, 1,
 		-1, -2, 1,
 		-1, 1, 1
+	};
+	int KernelSobelC[9]{
+		-1, 0, 1,
+		-2, 0, 2,
+		-1, 0, 1
+	};
+	int KernelSobelF[9]{
+		-1, -2,-1,
+		0, 0, 0,
+		1, 2, 1
+	};
+	int KernelGaussiano[9]{
+		1, 2, 1,
+		2, 4, 2,
+		1, 2, 1
+	};
+	int KernelSharpen[9]{
+		0, -1, 0,
+		-1, 5, -1,
+		0, -1, 0
+	};
+	int KernelEmboss[9]{
+		-2, -1,	 0,
+		-1,	 1,  1,
+		 0,  1,  2
 	};
 #pragma endregion
 
@@ -137,9 +175,10 @@ class ProcessImage
 		int DIV = 0;
 
 		// Generar DIV
-		for (int i = 0; i < sizeof(kernel); i++) { DIV += kernel[i]; }
+		for (int i = 0; i <= sizeof(kernel); i++) 
+		{ DIV += kernel[i]; }
 		
-		if (DIV == 0) { DIV = 1; }
+		if (DIV <= 0) { DIV = 1; }
 
 		int columns = matClone.cols * matClone.channels();
 		for (int matRow = 1; matRow < matClone.rows - 1; matRow++)
@@ -179,6 +218,84 @@ class ProcessImage
 		}
 	}
 
+	int CalcularPixelEcualizado(int cdf, int cdfmin, int pixels)
+	{
+		float result = ((float)(cdf - cdfmin) / (float)(pixels - cdfmin));
+		result *= 255;
+
+		if (result < 0)
+		{ result *= -1; }
+
+		return FloorPixel(result);
+	}
+
+	int GetMinValue(int arr[], int size)
+	{
+		int smallest = size;
+		for (int i = 1; i < size; ++i)
+		{
+			if (arr[i]  > 0 && arr[i] < smallest)
+			{ smallest = arr[i]; }
+		}
+		return smallest;
+	}
+
+	void DoEcualizar(Mat *source) {
+		// Contador de colores
+		int Red[256], Green[256], Blue[256];
+		int CDF_Red[256], CDF_Green[256], CDF_Blue[256];
+		
+		for (int i = 0; i < 256; i++)
+		{ 
+			Red[i] = Green[i] = Blue[i] = 0; 
+			CDF_Red[i] = CDF_Green[i] = CDF_Blue[i] = 0;
+		}
+
+		int columns = source->cols * source->channels();
+		for (int i = 0; i < source->rows; i++)
+		{
+			uchar *row = source->ptr<uchar>(i);
+			for (int j = 0; j < columns; j += 3)
+			{
+				Blue[row[j]]++;
+				Green[row[j + 1]]++;
+				Red[row[j + 2]]++;
+			}
+		}
+
+
+		for (int i = 1; i < 256; i++)
+		{
+			CDF_Blue[i] = CDF_Blue[i - 1] + Blue[i];
+			CDF_Green[i] = CDF_Green[i - 1] + Green[i];
+			CDF_Red[i] = CDF_Red[i - 1] + Red[i];
+		}
+
+		int CDF_MIN_BLUE = GetMinValue(CDF_Blue, 256);
+		int CDF_MIN_GREEN = GetMinValue(CDF_Green, 256);
+		int CDF_MIN_RED = GetMinValue(CDF_Red, 256);
+
+		int PIXELS = source->rows * source->cols;
+
+		for (int i = 0; i < 256; i++)
+		{
+			Blue[i] = CalcularPixelEcualizado(CDF_Blue[i], CDF_MIN_BLUE, PIXELS);
+			Green[i] = CalcularPixelEcualizado(CDF_Green[i], CDF_MIN_GREEN, PIXELS);
+			Red[i] = CalcularPixelEcualizado(CDF_Red[i], CDF_MIN_RED, PIXELS);
+		}
+
+		for (int i = 0; i < source->rows; i++)
+		{
+			uchar *row = source->ptr<uchar>(i);
+			for (int j = 0; j < columns; j += 3)
+			{
+				row[j] = Blue[FloorPixel(row[j])];
+				row[j + 1] = Green[FloorPixel(row[j + 1])];
+				row[j + 2] = Red[FloorPixel(row[j + 2])];
+			}
+		}
+	}
+
 public:
 	Mat Process(Mat source)
 	{
@@ -203,21 +320,63 @@ public:
 			{ DoKernel(&result, KernelNorteSur); }
 			else if (filter.compare(ESTEOESTE) == 0)
 			{ DoKernel(&result, KernelEsteOeste); }
+			else if (filter.compare(SOBEL_C) == 0)
+			{ DoKernel(&result, KernelSobelC); }
+			else if (filter.compare(SOBEL_F) == 0)
+			{ DoKernel(&result, KernelSobelF); }
+			else if (filter.compare(GAUSSIANO) == 0)
+			{ DoKernel(&result, KernelGaussiano); }
+			else if (filter.compare(SHARPEN) == 0)
+			{ DoKernel(&result, KernelSharpen); }
+			else if (filter.compare(EMBOSS) == 0)
+			{ DoKernel(&result, KernelEmboss); }
+			else if (filter.compare(ECUALIZAR) == 0)
+			{ DoEcualizar(&result); }
+		}
+		return result;
+	}
+
+	Mat GetHistograma(Mat source)
+	{
+		vector<Mat> bgr_planes;
+		split(source, bgr_planes);
+
+		int histSize = 256;
+
+		float range[] = { 0, 256 };
+		const float* histRange = { range };
+
+		bool uniform = true; bool accumulate = false;
+
+		Mat b_hist, g_hist, r_hist;
+
+		calcHist(&bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate);
+		calcHist(&bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate);
+		calcHist(&bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate);
+
+		int hist_w = 300; int hist_h = 300;
+		int bin_w = cvRound((double)hist_w / histSize);
+
+		Mat histImage(hist_h, hist_w, CV_8UC3, Scalar(0, 0, 0));
+
+		normalize(b_hist, b_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
+		normalize(g_hist, g_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
+		normalize(r_hist, r_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
+
+		for (int i = 1; i < histSize; i++)
+		{
+			line(histImage, Point(bin_w*(i - 1), hist_h - cvRound(b_hist.at<float>(i - 1))),
+				Point(bin_w*(i), hist_h - cvRound(b_hist.at<float>(i))),
+				Scalar(255, 0, 0), 2, 8, 0);
+			line(histImage, Point(bin_w*(i - 1), hist_h - cvRound(g_hist.at<float>(i - 1))),
+				Point(bin_w*(i), hist_h - cvRound(g_hist.at<float>(i))),
+				Scalar(0, 255, 0), 2, 8, 0);
+			line(histImage, Point(bin_w*(i - 1), hist_h - cvRound(r_hist.at<float>(i - 1))),
+				Point(bin_w*(i), hist_h - cvRound(r_hist.at<float>(i))),
+				Scalar(0, 0, 255), 2, 8, 0);
 		}
 
-		//int kdata[] = 
-		//{
-		//	255, 4, 6, 4, 255,
-		//	4, 16, 24, 16, 4,
-		//	6, 24, -1, 24, 6,
-		//	4, 16, 24, 16, 4,
-		//	255, 4, 6, 4, 255
-		//};
-		//Mat kernel(5, 5, -1, kdata);
-
-		//Mat result;
-		//filter2D(source, result, source.depth(), kernel);
-		return result;
+		return histImage;
 	}
 
 	void AddFilter(string filter)

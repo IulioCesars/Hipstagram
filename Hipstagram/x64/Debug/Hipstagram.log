@@ -1,1 +1,24 @@
-﻿  Hipstagram.vcxproj -> C:\SourceTree\Hipstagram\x64\Debug\Hipstagram.exe
+﻿  Main.cpp
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(159): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(160): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(161): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(173): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(229): warning C4244: 'argumento': conversión de 'float' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(102): warning C4244: '=': conversión de 'UINT_PTR' a 'UINT'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(107): warning C4244: '=': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(108): warning C4244: '=': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(159): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(292): warning C4244: 'argumento': conversión de 'double' a '_Tp'; posible pérdida de datos
+          with
+          [
+              _Tp=int
+          ]
+c:\sourcetree\hipstagram\hipstagram\main.cpp(331): warning C4244: 'inicializando': conversión de 'LRESULT' a 'int'; posible pérdida de datos
+  ProcessImage.cpp
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(159): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(160): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(161): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(173): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(229): warning C4244: 'argumento': conversión de 'float' a 'int'; posible pérdida de datos
+  Generando código...
+  Hipstagram.vcxproj -> C:\SourceTree\Hipstagram\x64\Debug\Hipstagram.exe

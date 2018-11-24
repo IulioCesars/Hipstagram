@@ -165,11 +165,16 @@ VOID OnTimer(HWND hWnd, UINT id)
 
 		MatFiltro = pImage.Process(MatOriginal);
 
+		if (SendDlgItemMessage(hWnd, IDC_CHECK_HISTOGRAMA, BM_GETCHECK, 0, 0))
+		{ imshow("Histograma Filtro", pImage.GetHistograma(MatFiltro)); }
+		else
+		{ destroyWindow("Histograma Filtro"); }
+
 		int totalPersonas = 0;
 		if (SendDlgItemMessage(hWnd, IDC_CHECK, BM_GETCHECK, 0, 0))
-		{ MatFiltro = hDetector.Process(MatOriginal, &totalPersonas); }
-
+		{ MatFiltro = hDetector.Process(MatFiltro, &totalPersonas); }
 		SetDlgItemText(hWnd, IDC_TXT_CONTEO, std::to_string(totalPersonas).c_str());
+
 
 		imshow("Original", MatOriginal);
 		imshow("Filtro", MatFiltro);
