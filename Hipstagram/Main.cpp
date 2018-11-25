@@ -37,6 +37,7 @@ int displayWith = 0;
 int displayHeight = 0;
 
 bool volverACalcularRedimencion = true;
+bool Grabar = false;
 Size proporcionRedimencion = Size(600,400);
 
 #pragma region Prototipos
@@ -99,7 +100,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR cmdLine, i
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 
-	TimerID = SetTimer(ghDlg, ID_MAINTIMER, 42, NULL);
+	TimerID = SetTimer(ghDlg, ID_MAINTIMER, 35, NULL);
 
 	HWND desk = GetDesktopWindow();
 	RECT desktop;
@@ -175,12 +176,11 @@ VOID OnTimer(HWND hWnd, UINT id)
 		{ MatFiltro = hDetector.Process(MatFiltro, &totalPersonas); }
 		SetDlgItemText(hWnd, IDC_TXT_CONTEO, std::to_string(totalPersonas).c_str());
 
+		if (vWritter.isOpened())
+		{ vWritter.write(MatFiltro); }
 
 		imshow("Original", MatOriginal);
 		imshow("Filtro", MatFiltro);
-
-		if (vWritter.isOpened())
-		{ vWritter.write(MatFiltro); }
 	}
 	else
 	{
@@ -289,9 +289,9 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 				vWritter.open(filename,
 					CV_FOURCC('M', 'J', 'P', 'G'),
 					10,
-					Size(vCapture.get(CV_CAP_PROP_FRAME_WIDTH), vCapture.get(CV_CAP_PROP_FRAME_HEIGHT))
+					proporcionRedimencion
 				);
-				int i = 0;
+				Grabar = true;
 			}
 
 		}
@@ -312,6 +312,7 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 			{ 
 				vWritter.release(); 
 				MostrarMensaje("Se ha guardado el archivo.", ":D");
+				Grabar = false;
 			}
 			else
 			{ MostrarMensaje("No se ha iniciado la grabación.","Error"); }

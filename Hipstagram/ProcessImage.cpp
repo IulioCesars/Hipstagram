@@ -354,7 +354,7 @@ public:
 		calcHist(&bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate);
 		calcHist(&bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate);
 
-		int hist_w = 300; int hist_h = 300;
+		int hist_w = 512; int hist_h = 400;
 		int bin_w = cvRound((double)hist_w / histSize);
 
 		Mat histImage(hist_h, hist_w, CV_8UC3, Scalar(0, 0, 0));
