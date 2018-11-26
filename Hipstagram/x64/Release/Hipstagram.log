@@ -1,5 +1,7 @@
 ﻿  HumanDetection.cpp
-  Main.cpp
-c:\sourcetree\hipstagram\hipstagram\processimage.cpp(1): fatal error C1083: No se puede abrir el archivo incluir: 'opencv2\core\core.hpp': No such file or directory
-  ProcessImage.cpp
-c:\sourcetree\hipstagram\hipstagram\processimage.cpp(1): fatal error C1083: No se puede abrir el archivo incluir: 'opencv2\core\core.hpp': No such file or directory
+  Generando código
+  0 of 491 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Generación de código finalizada
+  Hipstagram.vcxproj -> C:\SourceTree\Hipstagram\x64\Release\Hipstagram.exe
