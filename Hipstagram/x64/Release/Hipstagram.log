@@ -1,7 +1,18 @@
 ﻿  HumanDetection.cpp
+  Main.cpp
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(159): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(160): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(161): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(173): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\processimage.cpp(229): warning C4244: 'argumento': conversión de 'float' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(104): warning C4244: '=': conversión de 'UINT_PTR' a 'UINT'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(109): warning C4244: '=': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(110): warning C4244: '=': conversión de 'double' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(163): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+c:\sourcetree\hipstagram\hipstagram\main.cpp(335): warning C4244: 'inicializando': conversión de 'LRESULT' a 'int'; posible pérdida de datos
   Generando código
-  0 of 491 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
+  3 of 492 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
+    1 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Generación de código finalizada
   Hipstagram.vcxproj -> C:\SourceTree\Hipstagram\x64\Release\Hipstagram.exe

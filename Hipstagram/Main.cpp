@@ -45,6 +45,7 @@ INT_PTR CALLBACK MsgDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 VOID OnTimer(HWND hWnd, UINT id);
 VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify);
 BOOL OnInitDialog(HWND hWnd, HWND hWndCtl, LPARAM lParam);
+VOID OnClose();
 #pragma endregion
 
 #pragma region Utils
@@ -129,9 +130,11 @@ INT_PTR  CALLBACK MsgDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		//case WM_INITDIALOG:
 		//	return true;
 		case WM_CLOSE:
+			OnClose();
 			DestroyWindow(hDlg);
 			return true;
 		case WM_DESTROY:
+			OnClose();
 			PostQuitMessage(0);
 			return true;
 		
@@ -345,5 +348,12 @@ VOID OnCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 	break;
 	}
 	Pause = false;
+}
+VOID OnClose() 
+{
+	if (vCapture.isOpened())
+	{
+		vCapture.release();
+	}
 }
 
