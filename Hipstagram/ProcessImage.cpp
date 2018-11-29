@@ -24,9 +24,10 @@ const string GAUSSIANO = "L. Gaussiano";
 const string ECUALIZAR = "M. Ecualizar";
 const string SHARPEN = "X1. Sharpen";
 const string EMBOSS = "X2. Emboss";
+const string SOBELTOTAL = "SOBEL TOTAL";
 
 
-const string ListaFiltros[15] = 
+const string ListaFiltros[16] = 
 {
 	BLANCO_NEGRO,
 	SEPIA,
@@ -42,7 +43,8 @@ const string ListaFiltros[15] =
 	GAUSSIANO,
 	ECUALIZAR,
 	SHARPEN,
-	EMBOSS
+	EMBOSS,
+	SOBELTOTAL
 };
 
 class ProcessImage
@@ -218,6 +220,41 @@ class ProcessImage
 		}
 	}
 
+
+
+	void EdgeSobel(Mat inbuf, Mat outbuf, int height, int width) {
+		short filter_x[3][3] =
+		{ { -1, 0,  1},
+		{-2,  0, 2},
+		{ -1, 0,  1} };
+		short filter_y[3][3] =
+		{ { -1, -2,  -1},
+		{0,  0, 0},
+		{ 1, 2,  1} };
+		int sum_x = 0;
+		int sum_y = 0;
+		int sum = 0;
+		for (int i = 1; i < height - 1; i++)
+			for (int j = 1; j < width - 1; j++)
+			{
+				sum_x = 0;
+				sum_y = 0;
+				for (int a = -1; a <= 1; a++)
+					for (int b = -1; b <= 1; b++) {
+						uchar *buff = inbuf.ptr<uchar>((i + a)*width);
+
+						sum_x += buff[j + b] * filter_x[a + 1][b + 1];
+						sum_y += buff[j + b] * filter_y[a + 1][b + 1];
+					}
+				sum = (abs(sum_x) + abs(sum_y)) / 6;
+				if (sum < 0)   sum = 0;
+				if (sum > 255) sum = 255;
+
+				uchar *otro = outbuf.ptr<uchar>(i*width);
+				otro[j] = sum;
+			}
+	}
+
 	int CalcularPixelEcualizado(int cdf, int cdfmin, int pixels)
 	{
 		float result = ((float)(cdf - cdfmin) / (float)(pixels - cdfmin));
@@ -332,6 +369,17 @@ public:
 			{ DoKernel(&result, KernelEmboss); }
 			else if (filter.compare(ECUALIZAR) == 0)
 			{ DoEcualizar(&result); }
+			else if (filter.compare(SOBELTOTAL) == 0)
+			{
+				//Mat C = result.clone();
+				//Mat F = result.clone();
+
+				//DoKernel(&C, KernelSobelC);
+				//DoKernel(&F, KernelSobelF);
+
+				//subtract(C, F, result);
+				EdgeSobel(result.clone(), result, result.rows, result.cols * 3);
+			}
 		}
 		return result;
 	}

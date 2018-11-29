@@ -5,8 +5,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#pragma comment(lib,"opencv_world310.lib") // Relese
-//#pragma comment(lib,"opencv_world310d.lib")	// Debug
+//#pragma comment(lib,"opencv_world310.lib") // Relese
+#pragma comment(lib,"opencv_world310d.lib")	// Debug
 
 using namespace cv;
 using namespace std;
